@@ -14,99 +14,32 @@
 # along with BIOEval.  If not, see <http://www.gnu.org/licenses/>.
 __author__ = 'Aleksandar Savkov'
 
-
-prefixes = ['B', 'I', 'O', 'E', 'S']
-
-
 # precision = |correct chunks| / |guessed chunks|
 # recall    = |correct chunks| / |gold chunks|
+# f1 score  = 100 * 2 * precision * recall / (precision + recall)
 
 
-def read_file(fp, ts):
-    with open(fp, 'r') as fh:
-
-        gold = []
-        guess = []
-
-        gold_chunks = []
-        guess_chunks = []
-
-        for rn, row in enumerate(fh):
-
-            tabs = row.split(ts)
-
-            for n, i in [('gold', -2), ('guess', -1)]:
-                if tabs[i] in prefixes and tabs[i] == '-':
-                    raise AssertionError(
-                        'Invalid tag in `%s` column at row number: %s' % (n, rn)
-                    )
-
-            if gold and gold[-1][0] in ['S', 'E']:
-                gold_chunks.append(gold)
-                gold = []
-            if guess and guess[-1][0] in ['S', 'E']:
-                guess_chunks.append(gold)
-                guess = []
-
-            gold.append(tabs[:-1])
-            guess.append(tabs[:-2] + [tabs[-1]])
-
-    if gold:
-        gold_chunks.append(gold)
-    if guess:
-        guess_chunks.append(guess)
-
-    return gold_chunks, guess_chunks
+def _get_ncor(gold_chunks, guess_chunks):
+    return set(x for x in list(set(gold_chunks) & set(guess_chunks)))
 
 
-def scan_chunk(i, it):
-    try:
-        ch = it.next()
-        idx = i + len(ch)
-    except StopIteration:
-        ch = True
-        idx = i
-    return idx, ch
+def evaluate(gold_chunks, guess_chunks, chunk_col=3):
 
+    gold_tags = [x for y in gold_chunks for x in y]
+    guess_tags = [x for y in guess_chunks for x in y]
 
-def evaluate(gold_chunks, guess_chunks):
-    gold_it = iter(gold_chunks)
-    guess_it = iter(guess_chunks)
-    gold = None
-    guess = None
-    gold_idx = 0  # token index
-    guess_idx = 0  # token index
-    correct_chunks = []
-    gold_chunks = []
-    guess_chunks = []
+    assert len(gold_tags) == len(guess_tags), \
+        'Non-matching number of tags %s!=%s.' % (len(gold_tags),
+                                                 len(guess_tags))
 
-    while gold is True and guess is True:
+    goch = [x for x in gold_chunks if x[0][chunk_col] != 'O']
+    guch = [x for x in guess_chunks if x[0][chunk_col] != 'O']
 
-        if gold_idx <= guess_idx:
-            gold_idx, gold = scan_chunk(gold_idx, gold_it)
-            gold_chunks.append(gold)
+    co = _get_ncor(goch, guch)
 
-        if guess_idx <= gold_idx:
-            guess_idx, guess = scan_chunk(guess_idx, guess_it)
-            guess_chunks.append(guess)
-
-        gold_tag = gold[0][2:]
-        guess_tag = guess[0][2:]
-
-        same_end_index = gold_idx == guess_idx
-        same_tags = gold_tag == guess_tag
-        same_length = len(gold) == len(guess)
-
-        if same_end_index and same_tags and same_length:
-            correct_chunks.append(guess)
-
-    precision = float(len(correct_chunks)) / len(guess_chunks)
-    recall = float(len(correct_chunks)) / len(gold_chunks)
+    precision = len(co) / float(len(guch))
+    recall = len(co) / float(len(goch))
 
     f1 = 2 * precision * recall / (precision + recall)
 
-    return precision, recall, f1
-
-# Idea: develop the double iterator as in the Brat utils, but simpler. There can
-# be an index of the current chunk ending which should be the first check for
-# matching, the second is the tag type.
+    return 100 * f1, 100 * precision, 100 * recall
