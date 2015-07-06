@@ -341,7 +341,6 @@ class TestBIOEvalSpecial(TestCase):
         return res['Total']['fscore'], res['Total']['precision'], \
                res['Total']['recall']
 
-
     @staticmethod
     def _ssv2set(ssv):
         """Converts a SSVList with chunk tags and guess tags into two sets of
@@ -400,7 +399,9 @@ class TestBIOEvalSpecial(TestCase):
         except OSError:
             pass
 
-        for size in np.random.randint(3, len(data.sequences), reps):
+        n_seq = len(data.sequences)
+
+        for size in list(np.random.randint(3, n_seq, reps)) + [n_seq]:
 
             fp = 'tmp/data.%s.data' % RandomData._random_str()
             b = SSVList([x for y in data.sequences[:size] for x in y])
