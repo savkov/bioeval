@@ -23,7 +23,7 @@ def _get_ncor(gold_chunks, guess_chunks):
     return set(x for x in list(set(gold_chunks) & set(guess_chunks)))
 
 
-def evaluate(gold_chunks, guess_chunks, chunk_col=3):
+def evaluate(gold_chunks, guess_chunks, chunk_col=3, do_round=True):
 
     gold_tags = [x for y in gold_chunks for x in y]
     guess_tags = [x for y in guess_chunks for x in y]
@@ -42,4 +42,8 @@ def evaluate(gold_chunks, guess_chunks, chunk_col=3):
 
     f1 = 2 * precision * recall / (precision + recall)
 
-    return 100 * f1, 100 * precision, 100 * recall
+    if do_round:
+        return round(100 * f1, 2), round(100 * precision, 2), \
+               round(100 * recall, 2)
+    else:
+        return 100 * f1, 100 * precision, 100 * recall
