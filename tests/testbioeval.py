@@ -12,106 +12,20 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with bioeval.  If not, see <http://www.gnu.org/licenses/>.
-__author__ = 'Aleksandar Savkov'
 
 import os
 import sys
 import math
-import string
-import random
 import warnings
 import traceback
-import numpy as np
-from os.path import join
+import pandas as pd
+
 from unittest import TestCase
-from bioeval import evaluate, _get_ncor
-from iterpipes import check_call, cmd
+from bioeval import evaluate, evaluate_df, get_ncor
+from bioeval.utils import *
+from iterpipes3 import check_call, cmd
 
-
-class RandomData:
-
-    @staticmethod
-    def _random_summed_pair(sum):
-        x = np.random.randint(1, sum)
-        y = sum - x
-        return x, y
-
-    @staticmethod
-    def _random_token(idx):
-        return (
-            idx,
-            RandomData._random_str(np.random.randint(2, 20)),
-            RandomData._random_str(np.random.randint(1, 2)),
-            RandomData._random_str(np.random.randint(2, 20))
-        )
-
-    @staticmethod
-    def _make_chunk(idx, size):
-        ch = []
-        for ti in range(size):
-            t = RandomData._random_token(idx)
-            idx += 1
-            ch.append(t)
-        return tuple(ch)
-
-    @staticmethod
-    def _make_chunk_pair(idx):
-        x, y = RandomData._random_summed_pair(5)
-        ch = RandomData._make_chunk(idx, x)
-        ch2 = ch
-        while ch2 == ch:
-            ch2 = RandomData._make_chunk(idx + x, y)
-        return ch, ch2
-
-    @staticmethod
-    def _random_str(size=10,
-                    chars=string.ascii_uppercase + string.digits):
-        return ''.join([chars[x]
-                        for x
-                        in np.random.randint(0, len(chars), size)])
-
-    @staticmethod
-    def fscore(precision, recall):
-        return 100 * 2 * precision * recall / (precision + recall)
-
-    @staticmethod
-    def mock_chunks(n=10000, ncor=.8):
-        diff_pos = np.random.randint(-1, 1, 1)
-        n_guess = 0
-        while n_guess < ncor:
-            n_guess = n - ((np.random.uniform(0.1, 0.5) ** 2) * diff_pos) * n
-
-        gold, guess = set(), set()
-        idx = 0
-        for _ in range(int(ncor)):
-            ch = RandomData._make_chunk(idx, np.random.randint(1, 5))
-            idx += len(ch)
-            gold.add(ch)
-            guess.add(ch)
-
-        nrest = n - ncor
-
-        if nrest % 2 == 1:
-            size = np.random.randint(1, 5)
-            ch = RandomData._make_chunk(idx, size)
-            ch2 = ch
-            while ch2 == ch:
-                ch2 = RandomData._make_chunk(idx, size)
-            idx += size
-            gold.add(ch)
-            guess.add(ch2)
-
-        for _ in range(nrest/2):
-
-            ch, ch2 = RandomData._make_chunk_pair(idx)
-            gold.add(ch)
-            gold.add(ch2)
-
-            ch, ch2 = RandomData._make_chunk_pair(idx)
-            guess.add(ch)
-            guess.add(ch2)
-
-        return gold, guess
+__author__ = 'Aleksandar Savkov'
 
 
 class TestBIOEval(TestCase):
@@ -194,9 +108,9 @@ class TestBIOEval(TestCase):
             ((8, '.', '.', '.'),)
         }
 
-        f1, pr, re = evaluate(gold, guess)
+        f1, pr, re = evaluate(gold, guess, do_round=False)
 
-        self.assertAlmostEqual(f1, RandomData.fscore(6.0/7, 6.0/6))
+        self.assertAlmostEqual(f1, fscore(6.0/7, 6.0/6))
 
     def test_one_miss(self):
         gold = {
@@ -275,8 +189,10 @@ class TestBIOEval(TestCase):
         }
 
         f1, pr, re = evaluate(gold, guess)
+        f1_exact, _, _ = evaluate(gold, guess, do_round=False)
 
-        self.assertEqual(f1, RandomData.fscore(6.0/7, 6.0/7))
+        self.assertEqual(f1, round(fscore(6.0/7, 6.0/7), 2))
+        self.assertAlmostEqual(f1_exact, fscore(6.0/7, 6.0/7))
 
     def test_ncor(self):
         # change that to 1000+ if you want real testing
@@ -284,22 +200,55 @@ class TestBIOEval(TestCase):
         for i in range(rep):
             n = 10000
             ncor = math.floor(n * np.random.uniform(0.1, 1.0))
-            gold, guess = RandomData.mock_chunks(n=n, ncor=np.int(ncor))
+            gold, guess = mock_chunks(n=n, ncor=np.int(ncor))
             if len(gold) != len(guess):
-                print ncor, len(gold), len(guess)
+                print(ncor, len(gold), len(guess))
                 continue
-            nc = len(_get_ncor(gold, guess))
+            nc = len(get_ncor(gold, guess))
             self.assertAlmostEqual(nc, ncor, msg=(i,
                                                   len(gold),
                                                   len(guess),
                                                   nc,
                                                   ncor))
 
-###############################################################################
-# The following code block requires additional libraries to run. It is not
-# essential for the testing process, although it is a good way to empirically
-# confirm the tests with real-life redacted data.
-###############################################################################
+    def test_df(self):
+
+        df = pd.DataFrame(
+            [
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'B-foo',
+                 'guesstag': 'B-foo'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'I-foo',
+                 'guesstag': 'I-foo'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'O', 'guesstag': 'O'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'B-bar',
+                 'guesstag': 'B-bar'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'B-foo',
+                 'guesstag': 'B-foo'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'O', 'guesstag': 'O'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'B-foo',
+                 'guesstag': 'B-foo'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'I-foo',
+                 'guesstag': 'I-foo'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'B-bar',
+                 'guesstag': 'B-bar'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'I-bar',
+                 'guesstag': 'I-bar'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'O', 'guesstag': 'O'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'B-foo',
+                 'guesstag': 'B-foo'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'B-bar',
+                 'guesstag': 'I-foo'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'B-foo',
+                 'guesstag': 'B-foo'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'I-foo',
+                 'guesstag': 'B-foo'}
+            ]
+        )
+
+        f1, pr, re = evaluate_df(df, do_round=True)
+        real_f1 = round(fscore(5/8, 5/8), 2)
+        print(f1, real_f1)
+        self.assertEqual(f1, real_f1)
 
 
 class TestBIOEvalSpecial(TestCase):
@@ -313,11 +262,13 @@ class TestBIOEvalSpecial(TestCase):
         :param fp: file path
         :return: f1-score, precision, recall
         """
-        # library can be downloaded at https://github.com/savkov/ssvutils
-        from ssvutils import AccuracyResults
 
         cwd = '.'
-        fpres = 'tmp/results.%s' % RandomData._random_str()
+        try:
+            os.mkdir('tmp')
+        except OSError:
+            pass
+        fpres = 'tmp/results.%s' % random_str()
         fh_out = open(fpres, 'w')
 
         if '\t' in open(fp, 'r').readline():
@@ -330,9 +281,9 @@ class TestBIOEvalSpecial(TestCase):
 
             warnings.warn("Exception ocurred during Evaluation.")
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print "*** print_tb:"
+            print("*** print_tb:")
             traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-            print "*** print_exception:"
+            print("*** print_exception:")
             traceback.print_exception(exc_type, exc_value, exc_traceback,
                                       limit=2, file=sys.stdout)
         res = AccuracyResults()
@@ -379,55 +330,16 @@ class TestBIOEvalSpecial(TestCase):
 
         return go, ge
 
-    def test_against_conll(self):
-        """Tests empirically the performance of the this python implementation
-        against the conll-2000 script.
-        """
-        # library can be downloaded at https://github.com/savkov/ssvutils
-        from ssvutils import SSVList
+    def test_against_conll2(self):
 
-        data = SSVList()
-        data.parse_file('res/conll_sample.data', cols='chunkg', tab_sep=' ')
+        fp = 'res/conll_sample.data'
+        cols = ['form', 'pos', 'chunktag', 'guesstag']
+        df = pd.read_csv(fp, sep=' ', names=cols)
 
-        # change that to 1000+ if you want real testing
-        reps = 10
+        f1_conll, pre_conll, rec_conll = self._conll_eval(fp)
 
-        results = []
+        f1, pre, rec = evaluate_df(df, do_round=True)
 
-        try:
-            os.makedirs('tmp/')
-        except OSError:
-            pass
-
-        n_seq = len(data.sequences)
-
-        for size in list(np.random.randint(3, n_seq, reps)) + [n_seq]:
-
-            fp = 'tmp/data.%s.data' % RandomData._random_str()
-            b = SSVList([x for y in data.sequences[:size] for x in y])
-            b.export_to_file(fp, cols='chunkg', tab_sep=' ')
-            f1_conll, pr_conll, re_conll = self._conll_eval(fp)
-
-            go, ge = self._ssv2set(b)
-            for c in go:
-                for t in c:
-                    if len(t) < 4:
-                        print c
-            f1, pr, re = evaluate(go, ge)
-
-            os.remove(fp)
-
-            if not (f1_conll == round(f1, 2) and pr_conll == round(pr, 2) and
-                            re_conll == round(re, 2)):
-                print round(f1, 2), f1_conll, round(f1, 2) == f1_conll, \
-                    round(pr, 2), pr_conll, pr_conll == round(pr, 2), \
-                    round(re, 2), re_conll, re_conll == round(re, 2)
-
-            results.append((round(f1, 2), f1_conll, round(f1, 2) == f1_conll,
-                            round(pr, 2), pr_conll, pr_conll == round(pr, 2),
-                            round(re, 2), re_conll, re_conll == round(re, 2)))
-
-        wrong = len([x for x in results if not (x[2] and x[5] and x[8])])
-
-        self.assertEqual(0, wrong, msg='%s wrong iterations out of %s' %
-                                       (wrong, reps))
+        self.assertEqual(f1, f1_conll)
+        self.assertEqual(pre, pre_conll)
+        self.assertEqual(rec, rec_conll)
