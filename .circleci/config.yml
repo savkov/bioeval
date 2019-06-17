@@ -1,0 +1,37 @@
+version: 2
+workflows:
+  version: 2
+  bioeval-flow:
+    jobs:
+      - test:
+          filters:
+            branches:
+              ignore:
+                - master
+
+      - tag:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^.*/
+
+bioeval-env: &bioeval-env
+  docker:
+    - image: quay.io/savkov/test-env:latest
+  working_directory: ~/project
+
+jobs:
+  test:
+    <<: *bioeval-env
+    steps:
+      - checkout
+      - run: make build
+      - run: make lint
+      - run: make test
+
+  tag:
+    <<: *bioeval-env
+    steps:
+      - checkout
+      - run: make release
