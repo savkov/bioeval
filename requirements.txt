@@ -1,3 +1,3 @@
-iterpipes3
-numpy
-pandas
+-r requirements.txt
+iterpipes3==0.4
+numpy==1.16.4
