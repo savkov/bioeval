@@ -1,18 +1,3 @@
-# This file is part of bioeval.
-#
-# bioeval is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# bioeval is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with bioeval.  If not, see <http://www.gnu.org/licenses/>.
-
 import os
 import sys
 import math
@@ -219,12 +204,14 @@ class TestBIOEval(TestCase):
                  'guesstag': 'B-foo'},
                 {'form': 'foo', 'pos': 'bar', 'chunktag': 'I-foo',
                  'guesstag': 'I-foo'},
-                {'form': 'foo', 'pos': 'bar', 'chunktag': 'O', 'guesstag': 'O'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'O',
+                 'guesstag': 'O'},
                 {'form': 'foo', 'pos': 'bar', 'chunktag': 'B-bar',
                  'guesstag': 'B-bar'},
                 {'form': 'foo', 'pos': 'bar', 'chunktag': 'B-foo',
                  'guesstag': 'B-foo'},
-                {'form': 'foo', 'pos': 'bar', 'chunktag': 'O', 'guesstag': 'O'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'O',
+                 'guesstag': 'O'},
                 {'form': 'foo', 'pos': 'bar', 'chunktag': 'B-foo',
                  'guesstag': 'B-foo'},
                 {'form': 'foo', 'pos': 'bar', 'chunktag': 'I-foo',
@@ -233,7 +220,8 @@ class TestBIOEval(TestCase):
                  'guesstag': 'B-bar'},
                 {'form': 'foo', 'pos': 'bar', 'chunktag': 'I-bar',
                  'guesstag': 'I-bar'},
-                {'form': 'foo', 'pos': 'bar', 'chunktag': 'O', 'guesstag': 'O'},
+                {'form': 'foo', 'pos': 'bar', 'chunktag': 'O',
+                 'guesstag': 'O'},
                 {'form': 'foo', 'pos': 'bar', 'chunktag': 'B-foo',
                  'guesstag': 'B-foo'},
                 {'form': 'foo', 'pos': 'bar', 'chunktag': 'B-bar',
@@ -290,7 +278,7 @@ class TestBIOEvalSpecial(TestCase):
         res.parse_conll_eval_table(fpres)
         os.remove(fpres)
         return res['Total']['fscore'], res['Total']['precision'], \
-               res['Total']['recall']
+            res['Total']['recall']
 
     @staticmethod
     def _ssv2set(ssv):
