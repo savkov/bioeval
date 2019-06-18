@@ -18,7 +18,7 @@ workflows:
 
 bioeval-env: &bioeval-env
   docker:
-    - image: quay.io/savkov/test-env:latest
+    - image: circleci/python:3.6.8
   working_directory: ~/project
 
 jobs:
@@ -26,12 +26,30 @@ jobs:
     <<: *bioeval-env
     steps:
       - checkout
-      - run: make build
-      - run: make lint
-      - run: make test
+      - run:
+          name: Install dependencies
+          command: |
+            make build
+      - run:
+          name: Lint
+          command: |
+            export PATH=/home/circleci/.local/bin:$PATH
+            make lint
+      - run:
+          name: Install
+          command: |
+            make install
+      - run:
+          name: Test
+          command: |
+            export PATH=/home/circleci/.local/bin:$PATH
+            make test
 
   tag:
     <<: *bioeval-env
     steps:
       - checkout
-      - run: make release
+      - run:
+          name: Release
+          command: |
+            make release
