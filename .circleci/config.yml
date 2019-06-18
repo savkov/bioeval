@@ -6,9 +6,7 @@ workflows:
       - test:
           filters:
             branches:
-              ignore:
-                - master
-
+              only: /^.*/
       - tag:
           filters:
             branches:
