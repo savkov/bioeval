@@ -49,7 +49,7 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints:
-            - "MD5:8b:87:66:1b:29:18:34:a6:79:56:85:1f:78:27:1b:a0"
+            - "8b:87:66:1b:29:18:34:a6:79:56:85:1f:78:27:1b:a0"
       - run:
           name: Release
           command: |
