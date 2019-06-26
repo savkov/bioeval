@@ -56,4 +56,5 @@ jobs:
             pip install --user twine
             python -c "import os;open('/home/circleci/.ssh/bioevalkey', 'w').write(os.environ.get('SSH_PRIVATE_KEY').replace('_', '\n'))"
             sudo chmod 600 /home/circleci/.ssh/bioevalkey
+            export PATH=/home/circleci/.local/bin:$PATH
             make release
