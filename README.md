@@ -1,6 +1,8 @@
 # bioeval
 
 [![CircleCI](https://circleci.com/gh/savkov/bioeval/tree/master.svg?style=svg&circle-token=a7c321334dce133af9fca534f186d8e5816ee1fc)](https://circleci.com/gh/savkov/bioeval/tree/master)
+[![Maintainability](https://api.codeclimate.com/v1/badges/d68cb0f2bb9fb2fcbb2b/maintainability)](https://codeclimate.com/github/savkov/bioeval/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/d68cb0f2bb9fb2fcbb2b/test_coverage)](https://codeclimate.com/github/savkov/bioeval/test_coverage)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 CoNLL-2000 style evaluation of data using BIO and BEISO representation for 
