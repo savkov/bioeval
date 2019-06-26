@@ -17,6 +17,7 @@ lint:
 	flake8 bioeval
 
 release: build
+	pip install --user -r release_requirements.txt
 	python setup.py sdist bdist_wheel
 	python release.py prepare
 	twine upload dist/*
