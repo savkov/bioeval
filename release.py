@@ -16,7 +16,7 @@ if sys.argv[1] == 'prepare':
     with open('setup.py', 'w', encoding='utf-8') as fh:
         fh.write(repl)
     repo.index.add(['setup.py'])
-    repo.commit(f'Released {version}')
+    repo.index.commit(f'Released {version}')
     print('Ready to release!')
 
 elif sys.argv[1] == 'initiate':
