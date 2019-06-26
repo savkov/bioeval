@@ -22,4 +22,4 @@ release: build
 	python setup.py sdist bdist_wheel
 	twine upload --verbose dist/*
 	python release.py initiate
-	git push
+	git push origin master

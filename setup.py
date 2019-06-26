@@ -19,7 +19,7 @@ with open('README.md') as fh:
 
 setup(
     name='bioeval',
-    version='1.1.13.dev0',
+    version='1.1.14.dev0',
     description='BIO and BEISO evaluation library',
     author='Sasho Savkov',
     author_email='me@sasho.io',

@@ -3,6 +3,7 @@ from git import Repo
 import sys
 
 repo = Repo('.')
+repo.git.checkout('master')
 
 with open('setup.py') as fh:
     setup = fh.read()
