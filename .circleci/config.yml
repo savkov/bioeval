@@ -54,5 +54,5 @@ jobs:
           name: Release
           command: |
             python -c "import os;open('/home/circleci/.ssh/bioevalkey', 'w').write(os.environ.get('SSH_PRIVATE_KEY').replace('_', '\n'))"
-            sudo chmod 600 .ssh/bioevalkey
+            sudo chmod 600 /home/circleci/.ssh/bioevalkey
             make release
