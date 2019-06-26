@@ -6,9 +6,7 @@ workflows:
       - test:
           filters:
             branches:
-              ignore:
-                - master
-
+              only: /^.*/
       - tag:
           filters:
             branches:
@@ -49,7 +47,12 @@ jobs:
     <<: *bioeval-env
     steps:
       - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "MD5:8b:87:66:1b:29:18:34:a6:79:56:85:1f:78:27:1b:a0"
       - run:
           name: Release
           command: |
+            python -c "import os;open('/home/circleci/.ssh/bioevalkey', 'w').write(os.environ.get('SSH_PRIVATE_KEY').replace('_', '\n'))"
+            sudo chmod 600 .ssh/bioevalkey
             make release

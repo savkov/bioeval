@@ -19,3 +19,5 @@ lint:
 release: build
 	python setup.py sdist bdist_wheel
 	twine upload --repository pypi dist/*
+	python release.py
+	git push
