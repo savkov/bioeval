@@ -15,7 +15,7 @@ version = m.groupdict()['v']
 if sys.argv[1] == 'prepare':
     with open('setup.py', 'w', encoding='utf-8') as fh:
         fh.write(repl)
-    repo.index.add('setup.py')
+    repo.index.add(['setup.py'])
     repo.commit(f'Released {version}')
     print('Ready to release!')
 
@@ -25,6 +25,6 @@ elif sys.argv[1] == 'initiate':
     new_setup = re.sub(f'{version}', f'{version}.dev0', repl)
     with open('setup.py', 'w') as fh:
         fh.write(new_setup)
-    repo.index.add('setup.py')
+    repo.index.add(['setup.py'])
     repo.index.commit(f'Starting development of {version}')
     print('Ready to push!')
