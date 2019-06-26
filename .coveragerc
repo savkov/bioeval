@@ -9,3 +9,4 @@ omit =
     prl/*
     res/*
     setup.py
+    release.py
