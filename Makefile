@@ -7,7 +7,7 @@ build: clean
 	pip install --user -r test_requirements.txt
 
 test:
-	pytest -v --cov-config .coveragerc --cov tests
+	python -m pytest -v --cov-config .coveragerc --cov .
 	coverage xml
 
 install:
