@@ -6,13 +6,31 @@ workflows:
       - test:
           filters:
             branches:
-              only: /^.*/
+              ignore: master
+      - coverage:
+          filters:
+            branches:
+              only: master
       - tag:
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /^.*/
+
+setup_code_climate: &setup_code_climate
+  run:
+    name: setup code climate
+    command: |
+      curl -L -o cc-test-reporter https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64
+      chmod +x cc-test-reporter
+      ./cc-test-reporter before-
+
+upload_code_climate: &upload_code_climate
+  run:
+    name: upload coverage results
+    command: |
+      ./cc-test-reporter after-build -t coverage.py --exit-code $?
 
 bioeval-env: &bioeval-env
   docker:
@@ -42,6 +60,31 @@ jobs:
           command: |
             export PATH=/home/circleci/.local/bin:$PATH
             make test
+
+  coverage:
+    <<: *bioeval-env
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            make build
+      - run:
+          name: Lint
+          command: |
+            export PATH=/home/circleci/.local/bin:$PATH
+            make lint
+      - run:
+          name: Install
+          command: |
+            make install
+      - *setup_code_climate
+      - run:
+          name: Test
+          command: |
+            export PATH=/home/circleci/.local/bin:$PATH
+            make test
+      - *upload_code_climate
 
   tag:
     <<: *bioeval-env
