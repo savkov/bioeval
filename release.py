@@ -7,8 +7,7 @@ repo = Repo('.')
 with open('setup.py') as fh:
     setup = fh.read()
 
-repl = re.sub(r'(version\s*=\s*[\'"]\d+\.\d+\.\d+)\.dev0',
-              r'version=\g<1>', setup)
+repl = re.sub(r'(version\s*=\s*[\'"]\d+\.\d+\.\d+)\.dev0', r'\g<1>', setup)
 m = re.search(r'version\s*=\s*[\'"](?P<v>\d+\.\d+\.\d+)', repl)
 version = m.groupdict()['v']
 

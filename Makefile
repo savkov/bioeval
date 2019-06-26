@@ -18,8 +18,8 @@ lint:
 
 release: build
 	pip install --user -r release_requirements.txt
-	python setup.py sdist bdist_wheel
 	python release.py prepare
-	twine upload dist/*
+	python setup.py sdist bdist_wheel
+	twine upload --verbose dist/*
 	python release.py initiate
 	git push
